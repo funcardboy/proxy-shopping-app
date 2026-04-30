@@ -11,9 +11,8 @@ const withPWA = withPWAInit({
 
 const nextConfig: NextConfig = {
   /* config options here */
-  webpack: (config: any) => {
-    return config;
-  }
+  // Disabling Turbopack to allow PWA's custom webpack config to run in Next.js 16+
+  transpilePackages: ["next-pwa"],
 };
 
 export default withPWA(nextConfig) as any;
