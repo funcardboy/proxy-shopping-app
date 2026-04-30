@@ -48,39 +48,43 @@ export async function getItems(): Promise<Item[]> {
   const sheets = await getGoogleSheetsClient();
   const response = await sheets.spreadsheets.values.get({
     spreadsheetId: getSheetId(),
-    range: 'Items!A2:I',
+    range: 'Items!A2:J',
   });
 
   const rows = response.data.values || [];
-  return rows.map((row) => ({
-    id: row[0],
-    customerId: row[1],
-    description: row[2],
-    imageUrl: row[3],
-    costJpy: Number(row[4]),
-    exchangeRate: Number(row[5]),
-    costHkd: Number(row[6]),
-    status: row[7],
-    purchaseDate: row[8],
-  }));
+  return rows
+    .filter(row => row[9] !== 'TRUE') // Column J for 'cleared'
+    .map((row) => ({
+      id: row[0],
+      customerId: row[1],
+      description: row[2],
+      imageUrl: row[3],
+      costJpy: Number(row[4]),
+      exchangeRate: Number(row[5]),
+      costHkd: Number(row[6]),
+      status: row[7] as any,
+      purchaseDate: row[8],
+    }));
 }
 
 export async function getPayments(): Promise<Payment[]> {
   const sheets = await getGoogleSheetsClient();
   const response = await sheets.spreadsheets.values.get({
     spreadsheetId: getSheetId(),
-    range: 'Payments!A2:F',
+    range: 'Payments!A2:G',
   });
 
   const rows = response.data.values || [];
-  return rows.map((row) => ({
-    id: row[0],
-    customerId: row[1],
-    amountHkd: Number(row[2]),
-    paymentDate: row[3],
-    method: row[4],
-    note: row[5],
-  }));
+  return rows
+    .filter(row => row[6] !== 'TRUE') // Column G for 'cleared'
+    .map((row) => ({
+      id: row[0],
+      customerId: row[1],
+      amountHkd: Number(row[2]),
+      paymentDate: row[3],
+      method: row[4],
+      note: row[5],
+    }));
 }
 
 export async function addCustomer(customer: Omit<Customer, 'id' | 'createdAt'>) {
@@ -142,4 +146,51 @@ export async function addPayment(payment: Omit<Payment, 'id'>) {
       ]],
     },
   });
+}
+
+export async function clearCustomerHistory(customerId: string) {
+  const sheets = await getGoogleSheetsClient();
+  const spreadsheetId = getSheetId();
+
+  // 1. Get raw values for Items
+  const itemsResp = await sheets.spreadsheets.values.get({
+    spreadsheetId,
+    range: 'Items!A2:J',
+  });
+  const items = itemsResp.data.values || [];
+
+  // Update Items
+  for (let i = 0; i < items.length; i++) {
+    if (items[i][1] === customerId) {
+      const rowNum = i + 2;
+      await sheets.spreadsheets.values.update({
+        spreadsheetId,
+        range: `Items!J${rowNum}`,
+        valueInputOption: 'USER_ENTERED',
+        requestBody: { values: [['TRUE']] },
+      });
+    }
+  }
+
+  // 2. Get raw values for Payments
+  const paymentsResp = await sheets.spreadsheets.values.get({
+    spreadsheetId,
+    range: 'Payments!A2:G',
+  });
+  const payments = paymentsResp.data.values || [];
+
+  // Update Payments
+  for (let i = 0; i < payments.length; i++) {
+    if (payments[i][1] === customerId) {
+      const rowNum = i + 2;
+      await sheets.spreadsheets.values.update({
+        spreadsheetId,
+        range: `Payments!G${rowNum}`,
+        valueInputOption: 'USER_ENTERED',
+        requestBody: { values: [['TRUE']] },
+      });
+    }
+  }
+
+  console.log(`Clearing history for customer ${customerId}`);
 }
