@@ -62,6 +62,9 @@ export default function Dashboard() {
       <header className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
         <h1 className="text-2xl font-bold">代購管理儀表板</h1>
         <div className="flex w-full sm:w-auto gap-2">
+          <Link href="/add-customer" className="flex-1 sm:flex-none text-center bg-gray-600 text-white px-4 py-2 rounded-md hover:bg-gray-700">
+            + 客戶
+          </Link>
           <Link href="/add-item" className="flex-1 sm:flex-none text-center bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700">
             + 貨品
           </Link>
