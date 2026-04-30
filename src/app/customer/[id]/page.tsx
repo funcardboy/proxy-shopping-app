@@ -138,19 +138,21 @@ export default function CustomerDetailPage() {
           </div>
           <div className="text-right">
             <div className="text-sm text-gray-500 uppercase tracking-wider font-semibold">當前結餘</div>
-            <div className={`text-3xl font-bold ${totalBalance > 0.01 ? "text-red-600" : "text-green-600"}`}>
-              {totalBalance > 0.01 ? `-$${totalBalance.toFixed(2)}` : "已結清"}
+            <div className={`text-3xl font-bold ${totalBalance > 0.01 ? "text-red-600" : (totalBalance < -0.01 ? "text-green-600" : "text-gray-400")}`}>
+              {totalBalance > 0.01 ? `-$${totalBalance.toFixed(2)}` : (totalBalance < -0.01 ? `+$${Math.abs(totalBalance).toFixed(2)}` : "已結清")}
             </div>
+            {totalBalance < -0.01 && <div className="text-xs text-green-600 font-semibold">(客戶多付/信用額度)</div>}
+            {totalBalance > 0.01 && <div className="text-xs text-red-600 font-semibold">(客戶欠款)</div>}
           </div>
         </div>
       </header>
 
       <div className="space-y-12">
         {batches.map((batch, bIdx) => (
-          <section key={bIdx} className={`relative p-6 rounded-xl border ${batch.isSettled ? "bg-gray-50 border-gray-200" : "bg-white border-blue-200 shadow-sm"}`}>
+          <section key={bIdx} className={`relative p-6 rounded-xl border ${batch.isSettled ? "bg-gray-50 border-gray-200 opacity-80" : "bg-white border-blue-200 shadow-sm"}`}>
             <div className="absolute top-0 right-0 -mt-3 mr-4">
-              <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider ${batch.isSettled ? "bg-gray-200 text-gray-600" : "bg-blue-600 text-white"}`}>
-                {batch.isSettled ? "已結清批次" : "進行中批次"}
+              <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider ${batch.isSettled ? "bg-gray-200 text-gray-600" : (batch.finalBalance > 0 ? "bg-red-600 text-white" : "bg-green-600 text-white")}`}>
+                {batch.isSettled ? "已結清批次" : (batch.finalBalance > 0 ? "進行中批次 (欠款)" : "進行中批次 (信用)")}
               </span>
             </div>
             
@@ -172,7 +174,7 @@ export default function CustomerDetailPage() {
                         <div className="flex-grow">
                           <div className="font-medium">{tx.data.description}</div>
                           <div className="text-xs text-gray-500">
-                            JPY {tx.data.costJpy} @ {tx.data.exchangeRate}
+                            {tx.data.exchangeRate === 1 ? `HKD ${tx.data.costJpy}` : `JPY ${tx.data.costJpy} @ ${tx.data.exchangeRate}`}
                           </div>
                         </div>
                         <div className="text-red-600 font-semibold">
@@ -203,7 +205,9 @@ export default function CustomerDetailPage() {
             {!batch.isSettled && (
               <div className="mt-6 pt-4 border-t border-blue-100 flex justify-between items-center">
                 <span className="text-sm font-semibold text-gray-500 uppercase">批次小計</span>
-                <span className="text-xl font-bold text-red-600">-${batch.finalBalance.toFixed(2)}</span>
+                <span className={`text-xl font-bold ${batch.finalBalance > 0 ? "text-red-600" : "text-green-600"}`}>
+                  {batch.finalBalance > 0 ? `-${batch.finalBalance.toFixed(2)}` : `+${Math.abs(batch.finalBalance).toFixed(2)}`}
+                </span>
               </div>
             )}
           </section>

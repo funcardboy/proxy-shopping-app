@@ -76,17 +76,17 @@ export default function Dashboard() {
 
       <div className="grid gap-4">
         {summaries.map((s) => (
-          <div key={s.id} className="border p-4 rounded-lg shadow-sm flex justify-between items-center bg-white">
+          <Link href={`/customer/${s.id}`} key={s.id} className="border p-4 rounded-lg shadow-sm flex justify-between items-center bg-white hover:bg-gray-50 transition-colors">
             <div>
               <h2 className="text-lg font-semibold">{s.name}</h2>
               <div className="text-sm text-gray-500">
-                待找數: ${s.totalOwed.toFixed(2)} | 已付: ${s.totalPaid.toFixed(2)}
+                累計應付: ${s.totalOwed.toFixed(2)} | 累計已付: ${s.totalPaid.toFixed(2)}
               </div>
             </div>
-            <div className={`text-xl font-bold ${s.balance > 0 ? "text-red-600" : "text-green-600"}`}>
-              {s.balance > 0 ? `-$${s.balance.toFixed(2)}` : "已結清"}
+            <div className={`text-xl font-bold ${s.balance > 0.01 ? "text-red-600" : (s.balance < -0.01 ? "text-green-600" : "text-gray-400")}`}>
+              {s.balance > 0.01 ? `-$${s.balance.toFixed(2)}` : (s.balance < -0.01 ? `+$${Math.abs(s.balance).toFixed(2)}` : "已結清")}
             </div>
-          </div>
+          </Link>
         ))}
       </div>
     </main>

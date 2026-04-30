@@ -12,7 +12,8 @@ export default function AddItem() {
     customerId: "",
     description: "",
     imageUrl: "",
-    costJpy: "",
+    currency: "JPY",
+    cost: "",
     exchangeRate: "0.052", // Default rate
     status: "Ordered",
     purchaseDate: new Date().toISOString().split("T")[0],
@@ -34,8 +35,8 @@ export default function AddItem() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           ...formData,
-          costJpy: Number(formData.costJpy),
-          exchangeRate: Number(formData.exchangeRate),
+          costJpy: Number(formData.cost),
+          exchangeRate: formData.currency === "HKD" ? 1 : Number(formData.exchangeRate),
         }),
       });
 
@@ -88,26 +89,45 @@ export default function AddItem() {
         </div>
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-medium">成本 (日元 JPY)</label>
-            <input
+            <label className="block text-sm font-medium">貨幣</label>
+            <select
               className="w-full border p-2 rounded"
-              type="number"
-              value={formData.costJpy}
-              onChange={(e) => setFormData({ ...formData, costJpy: e.target.value })}
-              required
-            />
+              value={formData.currency}
+              onChange={(e) => {
+                const newCurrency = e.target.value;
+                setFormData({ 
+                  ...formData, 
+                  currency: newCurrency,
+                  exchangeRate: newCurrency === "HKD" ? "1" : "0.052"
+                });
+              }}
+            >
+              <option value="JPY">JPY (日元)</option>
+              <option value="HKD">HKD (港幣)</option>
+            </select>
           </div>
           <div>
-            <label className="block text-sm font-medium">匯率</label>
+            <label className="block text-sm font-medium">成本 ({formData.currency})</label>
             <input
               className="w-full border p-2 rounded"
               type="number"
-              step="0.0001"
-              value={formData.exchangeRate}
-              onChange={(e) => setFormData({ ...formData, exchangeRate: e.target.value })}
+              value={formData.cost}
+              onChange={(e) => setFormData({ ...formData, cost: e.target.value })}
               required
             />
           </div>
+        </div>
+        <div>
+          <label className="block text-sm font-medium">匯率</label>
+          <input
+            className="w-full border p-2 rounded bg-gray-50 disabled:bg-gray-100"
+            type="number"
+            step="0.0001"
+            value={formData.exchangeRate}
+            onChange={(e) => setFormData({ ...formData, exchangeRate: e.target.value })}
+            disabled={formData.currency === "HKD"}
+            required
+          />
         </div>
         <button
           type="submit"
