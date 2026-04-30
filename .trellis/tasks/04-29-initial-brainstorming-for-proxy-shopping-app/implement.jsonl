@@ -1,0 +1,32 @@
+# Implementation Plan - Phase 2 (Execution)
+
+## 🛠 Tech Stack Recommendation
+- **Frontend**: Next.js (App Router) + Tailwind CSS + Shadcn UI (Modern, mobile-friendly)
+- **Backend/Storage**: Google Sheets API (via `google-spreadsheet` npm package)
+- **Image Hosting**: Cloudinary or Imgur API (for easy image handling)
+- **Deployment**: Vercel (Quick & free tier available)
+
+## 📝 Step-by-Step Execution
+
+### Step 1: Project Setup
+- [ ] Initialize Next.js project in `proxy-shopping-app/`
+- [ ] Configure Google Cloud Service Account & obtain credentials
+- [ ] Setup a Google Sheet with the 3 tabs defined in `info.md`
+
+### Step 2: Data Access Layer
+- [ ] Create `lib/google-sheets.ts` to handle CRUD operations
+- [ ] Implement `getCustomers`, `getItemsByCustomer`, `addPayment` functions
+
+### Step 3: Core UI Components
+- [ ] **Dashboard**: Table/List of customers with their net balance (highlighted)
+- [ ] **Item Entry**: Form with JPY, Rate, and File Upload (Cloudinary integration)
+- [ ] **Transaction History**: Combined view of items and payments for a specific customer
+
+### Step 4: Logic & Calculation
+- [ ] Implement the "Outstanding Balance" formula in the frontend state
+- [ ] Add simple currency conversion helper (JPY -> HKD based on item-specific rate)
+
+## 🧪 Verification Plan
+- [ ] Add a test item and verify it appears in the Google Sheet
+- [ ] Record a partial payment and ensure the dashboard balance updates correctly
+- [ ] Test image upload and display on the customer detail page
