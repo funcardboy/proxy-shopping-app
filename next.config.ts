@@ -11,11 +11,12 @@ const withPWA = withPWAInit({
 
 const nextConfig: NextConfig = {
   /* config options here */
-  // Disabling Turbopack strictly by using the experimental flag
   experimental: {
-    turbo: {
-      // Empty rules to signal we acknowledge turbo but might not use it
-    },
+    // This is the correct field name to force-enable/disable turbopack behavior in some Next versions
+    // but the error specifically asks for turbopack: {}
+    turbopack: {
+      // empty
+    }
   },
   transpilePackages: ["next-pwa"],
 };
