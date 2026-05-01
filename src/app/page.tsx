@@ -55,39 +55,89 @@ export default function Dashboard() {
     fetchData();
   }, []);
 
-  if (loading) return <div className="p-8">載入中...</div>;
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="flex flex-col items-center gap-2">
+          <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+          <p className="text-muted-foreground animate-pulse">載入中...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <main className="p-4 max-w-4xl mx-auto">
-      <header className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
-        <h1 className="text-2xl font-bold">代購管理儀表板</h1>
-        <div className="flex w-full sm:w-auto gap-2">
-          <Link href="/add-customer" className="flex-1 sm:flex-none text-center bg-gray-600 text-white px-4 py-2 rounded-md hover:bg-gray-700">
-            + 客戶
-          </Link>
-          <Link href="/add-item" className="flex-1 sm:flex-none text-center bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700">
-            + 貨品
-          </Link>
-          <Link href="/add-payment" className="flex-1 sm:flex-none text-center bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700">
-            + 付款
-          </Link>
-        </div>
-      </header>
+    <main className="min-h-screen bg-background pb-20">
+      <div className="p-6 max-w-2xl mx-auto">
+        <header className="flex flex-col gap-1 mb-8">
+          <h1 className="text-3xl font-extrabold tracking-tight">代購助手</h1>
+          <p className="text-muted-foreground">概覽客戶帳目與進度</p>
+        </header>
 
-      <div className="grid gap-4">
-        {summaries.map((s) => (
-          <Link href={`/customer/${s.id}`} key={s.id} className="border p-4 rounded-lg shadow-sm flex justify-between items-center bg-white hover:bg-gray-50 transition-colors">
-            <div>
-              <h2 className="text-lg font-semibold">{s.name}</h2>
-              <div className="text-sm text-gray-500">
-                累計應付: ${s.totalOwed.toFixed(2)} | 累計已付: ${s.totalPaid.toFixed(2)}
-              </div>
+        <section className="grid grid-cols-3 gap-3 mb-8">
+          <Link href="/add-customer" className="flex flex-col items-center justify-center gap-2 p-4 bg-card border border-border rounded-xl shadow-sm active:scale-95 transition-transform">
+            <div className="w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center text-blue-600 dark:text-blue-400">
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>
             </div>
-            <div className={`text-xl font-bold ${s.balance > 0.01 ? "text-red-600" : (s.balance < -0.01 ? "text-green-600" : "text-gray-400")}`}>
-              {s.balance > 0.01 ? `-$${s.balance.toFixed(2)}` : (s.balance < -0.01 ? `+$${Math.abs(s.balance).toFixed(2)}` : "已結清")}
-            </div>
+            <span className="text-xs font-semibold">客戶</span>
           </Link>
-        ))}
+          <Link href="/add-item" className="flex flex-col items-center justify-center gap-2 p-4 bg-card border border-border rounded-xl shadow-sm active:scale-95 transition-transform">
+            <div className="w-10 h-10 rounded-full bg-indigo-100 dark:bg-indigo-900/30 flex items-center justify-center text-indigo-600 dark:text-indigo-400">
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m7.5 4.27 9 5.15"/><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.27 6.96 8.73 5.04 8.73-5.04"/><path d="M12 22.08V12"/></svg>
+            </div>
+            <span className="text-xs font-semibold">貨品</span>
+          </Link>
+          <Link href="/add-payment" className="flex flex-col items-center justify-center gap-2 p-4 bg-card border border-border rounded-xl shadow-sm active:scale-95 transition-transform">
+            <div className="w-10 h-10 rounded-full bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center text-emerald-600 dark:text-emerald-400">
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="20" height="14" x="2" y="5" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
+            </div>
+            <span className="text-xs font-semibold">付款</span>
+          </Link>
+        </section>
+
+        <div className="space-y-4">
+          <div className="flex items-center justify-between px-1">
+            <h2 className="text-sm font-bold text-muted-foreground uppercase tracking-wider">所有客戶 ({summaries.length})</h2>
+          </div>
+          
+          <div className="grid gap-3">
+            {summaries.map((s) => (
+              <Link 
+                href={`/customer/${s.id}`} 
+                key={s.id} 
+                className="group relative bg-card border border-border p-4 rounded-2xl shadow-sm active:scale-[0.98] transition-all hover:border-primary/30"
+              >
+                <div className="flex justify-between items-center">
+                  <div className="flex flex-col gap-1">
+                    <h3 className="text-lg font-bold group-hover:text-primary transition-colors">{s.name}</h3>
+                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                      <span>應付 HKD {s.totalOwed.toLocaleString()}</span>
+                      <span className="w-1 h-1 rounded-full bg-border"></span>
+                      <span>已付 HKD {s.totalPaid.toLocaleString()}</span>
+                    </div>
+                  </div>
+                  
+                  <div className="text-right">
+                    <div className={`text-xl font-black tabular-nums ${s.balance > 0.01 ? "text-destructive" : (s.balance < -0.01 ? "text-success" : "text-muted-foreground")}`}>
+                      {s.balance > 0.01 ? `-$${s.balance.toLocaleString()}` : (s.balance < -0.01 ? `+$${Math.abs(s.balance).toLocaleString()}` : "已結清")}
+                    </div>
+                    <div className="text-[10px] font-bold uppercase opacity-60">
+                      {s.balance > 0.01 ? "待追討" : (s.balance < -0.01 ? "多付額" : "已清數")}
+                    </div>
+                  </div>
+                </div>
+                
+                {/* Visual indicator bar */}
+                <div className="mt-3 w-full h-1 bg-muted rounded-full overflow-hidden">
+                   <div 
+                    className={`h-full transition-all duration-500 ${s.balance > 0.01 ? "bg-destructive/40" : (s.balance < -0.01 ? "bg-success/40" : "bg-muted-foreground/20")}`}
+                    style={{ width: s.totalOwed > 0 ? `${Math.min(100, (s.totalPaid / s.totalOwed) * 100)}%` : "0%" }}
+                   ></div>
+                </div>
+              </Link>
+            ))}
+          </div>
+        </div>
       </div>
     </main>
   );

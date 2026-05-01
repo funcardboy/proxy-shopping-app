@@ -120,98 +120,128 @@ export default function CustomerDetailPage() {
     fetchData();
   }, [id]);
 
-  if (loading) return <div className="p-8 text-center">載入中...</div>;
-  if (!customer) return <div className="p-8 text-center text-red-600">找不到客戶</div>;
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="flex flex-col items-center gap-2">
+          <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+          <p className="text-muted-foreground animate-pulse">載入詳情中...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!customer) return (
+    <div className="min-h-screen flex flex-col items-center justify-center p-6 text-center">
+      <div className="text-destructive text-4xl mb-4">⚠️</div>
+      <h1 className="text-xl font-bold mb-2">找不到客戶</h1>
+      <Link href="/" className="text-primary font-semibold hover:underline">返回首頁</Link>
+    </div>
+  );
 
   const totalBalance = batches.reduce((sum, b) => sum + b.finalBalance, 0);
 
   return (
-    <main className="p-4 max-w-4xl mx-auto">
-      <header className="mb-8">
-        <Link href="/" className="text-blue-600 hover:underline mb-4 inline-block">
-          ← 返回儀表板
-        </Link>
-        <div className="flex justify-between items-end">
-          <div>
-            <h1 className="text-3xl font-bold">{customer.name}</h1>
-            <p className="text-gray-500">{customer.contactInfo}</p>
-          </div>
-          <div className="text-right">
-            <div className="text-sm text-gray-500 uppercase tracking-wider font-semibold">當前結餘</div>
-            <div className={`text-3xl font-bold ${totalBalance > 0.01 ? "text-red-600" : (totalBalance < -0.01 ? "text-green-600" : "text-gray-400")}`}>
-              {totalBalance > 0.01 ? `-$${totalBalance.toFixed(2)}` : (totalBalance < -0.01 ? `+$${Math.abs(totalBalance).toFixed(2)}` : "已結清")}
-            </div>
-            {totalBalance < -0.01 && <div className="text-xs text-green-600 font-semibold">(客戶多付/信用額度)</div>}
-            {totalBalance > 0.01 && <div className="text-xs text-red-600 font-semibold">(客戶欠款)</div>}
-          </div>
-        </div>
-      </header>
-
-      <div className="space-y-12">
-        {batches.map((batch, bIdx) => (
-          <section key={bIdx} className={`relative p-6 rounded-xl border ${batch.isSettled ? "bg-gray-50 border-gray-200 opacity-80" : "bg-white border-blue-200 shadow-sm"}`}>
-            <div className="absolute top-0 right-0 -mt-3 mr-4">
-              <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider ${batch.isSettled ? "bg-gray-200 text-gray-600" : (batch.finalBalance > 0 ? "bg-red-600 text-white" : "bg-green-600 text-white")}`}>
-                {batch.isSettled ? "已結清批次" : (batch.finalBalance > 0 ? "進行中批次 (欠款)" : "進行中批次 (信用)")}
-              </span>
+    <main className="min-h-screen bg-background pb-12">
+      <div className="p-6 max-w-2xl mx-auto">
+        <header className="mb-8">
+          <Link href="/" className="inline-flex items-center gap-1 text-sm font-bold text-muted-foreground hover:text-primary transition-colors mb-4">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+            返回概覽
+          </Link>
+          
+          <div className="flex justify-between items-start">
+            <div className="space-y-1">
+              <h1 className="text-4xl font-black tracking-tight">{customer.name}</h1>
+              <div className="inline-flex items-center gap-2 px-2 py-1 bg-muted rounded-md text-xs font-medium text-muted-foreground">
+                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+                {customer.contactInfo || "未提供聯絡資料"}
+              </div>
             </div>
             
-            <div className="space-y-4">
-              {batch.transactions.map((tx, tIdx) => (
-                <div key={tIdx} className="flex gap-4 items-start py-2 border-b last:border-0 border-gray-100">
-                  <div className="text-sm text-gray-400 w-24 flex-shrink-0 pt-1">
-                    {tx.date.toLocaleDateString()}
-                  </div>
-                  
-                  <div className="flex-grow flex gap-4">
-                    {tx.type === 'item' ? (
-                      <>
-                        {tx.data.imageUrl && (
-                          <div className="w-16 h-16 bg-gray-100 rounded overflow-hidden flex-shrink-0 border">
-                            <img src={tx.data.imageUrl} alt={tx.data.description} className="w-full h-full object-cover" />
-                          </div>
-                        )}
-                        <div className="flex-grow">
-                          <div className="font-medium">{tx.data.description}</div>
-                          <div className="text-xs text-gray-500">
-                            {tx.data.exchangeRate === 1 ? `HKD ${tx.data.costJpy}` : `JPY ${tx.data.costJpy} @ ${tx.data.exchangeRate}`}
-                          </div>
-                        </div>
-                        <div className="text-red-600 font-semibold">
-                          -${tx.data.costHkd.toFixed(2)}
-                        </div>
-                      </>
-                    ) : (
-                      <>
-                        <div className="w-16 flex-shrink-0 flex justify-center">
-                          <div className="w-8 h-8 bg-green-100 text-green-600 rounded-full flex items-center justify-center">
-                            $
-                          </div>
-                        </div>
-                        <div className="flex-grow">
-                          <div className="font-medium text-green-700">付款: {tx.data.method}</div>
-                          {tx.data.note && <div className="text-sm text-gray-500">{tx.data.note}</div>}
-                        </div>
-                        <div className="text-green-600 font-bold">
-                          +${tx.data.amountHkd.toFixed(2)}
-                        </div>
-                      </>
-                    )}
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            {!batch.isSettled && (
-              <div className="mt-6 pt-4 border-t border-blue-100 flex justify-between items-center">
-                <span className="text-sm font-semibold text-gray-500 uppercase">批次小計</span>
-                <span className={`text-xl font-bold ${batch.finalBalance > 0 ? "text-red-600" : "text-green-600"}`}>
-                  {batch.finalBalance > 0 ? `-${batch.finalBalance.toFixed(2)}` : `+${Math.abs(batch.finalBalance).toFixed(2)}`}
-                </span>
+            <div className="flex flex-col items-end">
+              <div className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-1">當前結餘</div>
+              <div className={`text-4xl font-black tabular-nums leading-none ${totalBalance > 0.01 ? "text-destructive" : (totalBalance < -0.01 ? "text-success" : "text-muted-foreground")}`}>
+                {totalBalance > 0.01 ? `-$${totalBalance.toLocaleString()}` : (totalBalance < -0.01 ? `+$${Math.abs(totalBalance).toLocaleString()}` : "已結清")}
               </div>
-            )}
-          </section>
-        ))}
+              <div className={`mt-1 text-[10px] font-bold px-2 py-0.5 rounded uppercase ${totalBalance > 0.01 ? "bg-destructive/10 text-destructive" : (totalBalance < -0.01 ? "bg-success/10 text-success" : "bg-muted text-muted-foreground")}`}>
+                {totalBalance > 0.01 ? "欠款" : (totalBalance < -0.01 ? "預付額" : "已結清")}
+              </div>
+            </div>
+          </div>
+        </header>
+
+        <div className="space-y-12 relative">
+          {/* Timeline center line */}
+          <div className="absolute left-[11px] top-4 bottom-4 w-[2px] bg-border/40 z-0"></div>
+
+          {batches.map((batch, bIdx) => (
+            <section key={bIdx} className="relative z-10">
+              <div className="flex items-center gap-4 mb-6">
+                 <div className={`w-6 h-6 rounded-full border-4 border-background flex-shrink-0 z-20 ${batch.isSettled ? "bg-muted-foreground/30 shadow-[0_0_0_2px_rgba(0,0,0,0.05)]" : (batch.finalBalance > 0 ? "bg-destructive animate-pulse shadow-[0_0_0_4px_rgba(239,68,68,0.2)]" : "bg-success shadow-[0_0_0_4px_rgba(34,197,94,0.2)]")}`}></div>
+                 <div className="flex items-center gap-2">
+                    <h2 className="text-sm font-black uppercase tracking-wider">
+                      {batch.isSettled ? "已結清批次" : (batch.finalBalance > 0 ? "未結清項目" : "預付批次")}
+                    </h2>
+                    {!batch.isSettled && (
+                       <span className={`text-xs font-bold px-2 py-0.5 rounded ${batch.finalBalance > 0 ? "bg-destructive/10 text-destructive" : "bg-success/10 text-success"}`}>
+                        HKD {Math.abs(batch.finalBalance).toLocaleString()}
+                       </span>
+                    )}
+                 </div>
+              </div>
+
+              <div className={`ml-[11px] pl-8 space-y-1 ${batch.isSettled ? "opacity-60 grayscale-[0.5]" : ""}`}>
+                {batch.transactions.map((tx, tIdx) => (
+                  <div key={tIdx} className="relative group pb-6 last:pb-0">
+                    {/* Item marker */}
+                    <div className="absolute -left-[35px] top-1.5 w-3 h-3 rounded-full bg-background border-2 border-border group-hover:border-primary transition-colors"></div>
+                    
+                    <div className={`p-4 rounded-2xl border transition-all ${tx.type === 'item' ? "bg-card border-border" : "bg-success/5 border-success/20 shadow-sm shadow-success/5"}`}>
+                      <div className="flex justify-between items-start gap-4">
+                        <div className="flex gap-4">
+                          {tx.type === 'item' && tx.data.imageUrl && (
+                            <div className="w-14 h-14 bg-muted rounded-xl overflow-hidden flex-shrink-0 border border-border/50 shadow-sm">
+                              <img src={tx.data.imageUrl} alt={tx.data.description} className="w-full h-full object-cover" />
+                            </div>
+                          )}
+                          {tx.type === 'payment' && (
+                            <div className="w-14 h-14 bg-success/20 text-success rounded-xl flex items-center justify-center flex-shrink-0">
+                              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><rect width="20" height="14" x="2" y="5" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
+                            </div>
+                          )}
+                          
+                          <div>
+                            <div className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-0.5">
+                              {new Date(tx.date).toLocaleDateString('zh-HK', { month: 'short', day: 'numeric', year: 'numeric' })}
+                            </div>
+                            <div className="font-bold text-base leading-tight">
+                              {tx.type === 'item' ? tx.data.description : `付款: ${tx.data.method}`}
+                            </div>
+                            {tx.type === 'item' && (
+                              <div className="text-xs font-semibold text-muted-foreground mt-1">
+                                {tx.data.exchangeRate === 1 ? `HKD ${tx.data.costJpy}` : `JPY ${tx.data.costJpy.toLocaleString()} @ ${tx.data.exchangeRate}`}
+                              </div>
+                            )}
+                            {tx.type === 'payment' && tx.data.note && (
+                              <div className="text-xs font-medium text-success/70 mt-1 italic">
+                                "{tx.data.note}"
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                        
+                        <div className={`text-lg font-black tabular-nums ${tx.type === 'item' ? "text-destructive" : "text-success"}`}>
+                          {tx.type === 'item' ? `-$${tx.data.costHkd.toLocaleString()}` : `+$${tx.data.amountHkd.toLocaleString()}`}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </section>
+          ))}
+        </div>
       </div>
     </main>
   );
