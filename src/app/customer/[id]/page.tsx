@@ -197,7 +197,7 @@ export default function CustomerDetailPage() {
                     {/* Item marker */}
                     <div className="absolute -left-[35px] top-1.5 w-3 h-3 rounded-full bg-background border-2 border-border group-hover:border-primary transition-colors"></div>
                     
-                    <div className={`p-4 rounded-2xl border transition-all ${tx.type === 'item' ? "bg-card border-border" : "bg-success/5 border-success/20 shadow-sm shadow-success/5"}`}>
+                    <div className={`p-4 rounded-2xl border transition-all ${tx.type === 'item' ? "bg-card border-border" : (tx.data.amountHkd < 0 ? "bg-destructive/5 border-destructive/20 shadow-sm shadow-destructive/5" : "bg-success/5 border-success/20 shadow-sm shadow-success/5")}`}>
                       <div className="flex justify-between items-start gap-4">
                         <div className="flex gap-4">
                           {tx.type === 'item' && tx.data.imageUrl && (
@@ -206,8 +206,12 @@ export default function CustomerDetailPage() {
                             </div>
                           )}
                           {tx.type === 'payment' && (
-                            <div className="w-14 h-14 bg-success/20 text-success rounded-xl flex items-center justify-center flex-shrink-0">
-                              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><rect width="20" height="14" x="2" y="5" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
+                            <div className={`w-14 h-14 rounded-xl flex items-center justify-center flex-shrink-0 ${tx.data.amountHkd < 0 ? "bg-destructive/20 text-destructive" : "bg-success/20 text-success"}`}>
+                              {tx.data.amountHkd < 0 ? (
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2v20m0-20l-5 5m5-5l5 5"/><path d="M12 2v20m0 0l-5-5m5 5l5-5"/></svg>
+                              ) : (
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><rect width="20" height="14" x="2" y="5" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
+                              )}
                             </div>
                           )}
                           
@@ -216,7 +220,7 @@ export default function CustomerDetailPage() {
                               {new Date(tx.date).toLocaleDateString('zh-HK', { month: 'short', day: 'numeric', year: 'numeric' })}
                             </div>
                             <div className="font-bold text-base leading-tight">
-                              {tx.type === 'item' ? tx.data.description : `付款: ${tx.data.method}`}
+                              {tx.type === 'item' ? tx.data.description : (tx.data.amountHkd < 0 ? `Sam's Debt: ${tx.data.method}` : `付款: ${tx.data.method}`)}
                             </div>
                             {tx.type === 'item' && (
                               <div className="text-xs font-semibold text-muted-foreground mt-1">
@@ -224,15 +228,15 @@ export default function CustomerDetailPage() {
                               </div>
                             )}
                             {tx.type === 'payment' && tx.data.note && (
-                              <div className="text-xs font-medium text-success/70 mt-1 italic">
+                              <div className={`text-xs font-medium mt-1 italic ${tx.data.amountHkd < 0 ? "text-destructive/70" : "text-success/70"}`}>
                                 "{tx.data.note}"
                               </div>
                             )}
                           </div>
                         </div>
                         
-                        <div className={`text-lg font-black tabular-nums ${tx.type === 'item' ? "text-destructive" : "text-success"}`}>
-                          {tx.type === 'item' ? `-$${tx.data.costHkd.toLocaleString()}` : `+$${tx.data.amountHkd.toLocaleString()}`}
+                        <div className={`text-lg font-black tabular-nums ${tx.type === 'item' ? "text-destructive" : (tx.data.amountHkd < 0 ? "text-destructive" : "text-success")}`}>
+                          {tx.type === 'item' ? `-$${tx.data.costHkd.toLocaleString()}` : (tx.data.amountHkd < 0 ? `-$${Math.abs(tx.data.amountHkd).toLocaleString()}` : `+$${tx.data.amountHkd.toLocaleString()}`)}
                         </div>
                       </div>
                     </div>

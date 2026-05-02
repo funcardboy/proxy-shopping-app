@@ -15,6 +15,7 @@ export default function AddPayment() {
     amountHkd: "",
     method: "FPS",
     note: "",
+    direction: "in", // "in" for customer pays Sam, "out" for Sam owes customer
     paymentDate: new Date().toISOString().split("T")[0],
   });
 
@@ -28,13 +29,16 @@ export default function AddPayment() {
     e.preventDefault();
     setLoading(true);
 
+    const amount = Number(formData.amountHkd);
+    const finalAmount = formData.direction === "out" ? -amount : amount;
+
     try {
       const res = await fetch("/api/payments", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           ...formData,
-          amountHkd: Number(formData.amountHkd),
+          amountHkd: finalAmount,
         }),
       });
 
@@ -90,6 +94,28 @@ export default function AddPayment() {
               </select>
             </div>
 
+            <div className="space-y-3">
+              <label className="text-xs font-black uppercase tracking-widest text-muted-foreground px-1">方向</label>
+              <div className="grid grid-cols-2 gap-3">
+                <button
+                  type="button"
+                  onClick={() => setFormData({ ...formData, direction: "in" })}
+                  className={`p-4 rounded-2xl font-bold border-2 transition-all flex flex-col items-center gap-1 ${formData.direction === "in" ? "border-success bg-success/10 text-success" : "border-border hover:border-muted-foreground/30"}`}
+                >
+                  <span className="text-lg">💰</span>
+                  <span className="text-sm">客戶找數比我</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setFormData({ ...formData, direction: "out" })}
+                  className={`p-4 rounded-2xl font-bold border-2 transition-all flex flex-col items-center gap-1 ${formData.direction === "out" ? "border-destructive bg-destructive/10 text-destructive" : "border-border hover:border-muted-foreground/30"}`}
+                >
+                  <span className="text-lg">💸</span>
+                  <span className="text-sm">我欠客戶錢</span>
+                </button>
+              </div>
+            </div>
+
             <div className="space-y-1.5">
               <label className="text-xs font-black uppercase tracking-widest text-muted-foreground px-1">金額 (港元 HKD)</label>
               <input
@@ -133,7 +159,7 @@ export default function AddPayment() {
 
           <button
             type="submit"
-            className="w-full bg-success text-white p-5 rounded-2xl font-black text-lg shadow-lg shadow-success/20 hover:shadow-success/40 active:scale-[0.98] transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+            className={`w-full text-white p-5 rounded-2xl font-black text-lg shadow-lg active:scale-[0.98] transition-all disabled:opacity-50 flex items-center justify-center gap-2 ${formData.direction === "out" ? "bg-destructive shadow-destructive/20 hover:shadow-destructive/40" : "bg-success shadow-success/20 hover:shadow-success/40"}`}
             disabled={loading}
           >
             {loading ? (
@@ -141,7 +167,7 @@ export default function AddPayment() {
                 <div className="w-5 h-5 border-3 border-white/30 border-t-white rounded-full animate-spin"></div>
                 處理中
               </>
-            ) : "確認記錄付款"}
+            ) : (formData.direction === "out" ? "確認記錄支出" : "確認記錄付款")}
           </button>
         </form>
       </div>
