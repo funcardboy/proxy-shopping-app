@@ -11,13 +11,6 @@ const withPWA = withPWAInit({
 
 const nextConfig: NextConfig = {
   /* config options here */
-  experimental: {
-    // This is the correct field name to force-enable/disable turbopack behavior in some Next versions
-    // but the error specifically asks for turbopack: {}
-    turbopack: {
-      // empty
-    }
-  },
   transpilePackages: ["next-pwa"],
 };
 

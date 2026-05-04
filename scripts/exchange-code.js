@@ -7,7 +7,7 @@ const REDIRECT_URI = 'https://developers.google.com/oauthplayground';
 
 const oauth2Client = new google.auth.OAuth2(CLIENT_ID, CLIENT_SECRET, REDIRECT_URI);
 
-const code = '4/0AeoWuM_-XBbzNONUTYJRhRrp71aIi7HyPCu28iyf7ITUdfFNNfw4X3sEmjEhT2h66Z_9JA';
+const code = '4/0AeoWuM_YaQkZWI67bFeA0hBWweLvNnhXaac93caNW73s4wbUlShO3ChR_GP14qWC7Z0WVw';
 
 async function getRefreshToken() {
   try {

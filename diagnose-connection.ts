@@ -32,9 +32,10 @@ async function diagnose() {
     const drive = await getGoogleDriveClient();
     const folder = await drive.files.get({
       fileId: folderId!,
-      fields: 'id, name, capabilities',
+      fields: 'id, name, capabilities, owners',
     });
     console.log(`Folder Access SUCCESS. Name: "${folder.data.name}"`);
+    console.log('Owners:', folder.data.owners?.map(o => o.emailAddress));
     console.log('Capabilities:', folder.data.capabilities);
 
     console.log('\nTesting Google Drive Upload...');
