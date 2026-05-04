@@ -119,13 +119,22 @@ export default function AddItem() {
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ imageBase64: base64 }),
           });
+          
+          if (!ocrRes.ok) {
+            const errorText = await ocrRes.text();
+            console.error(`OCR API Error (${ocrRes.status}):`, errorText);
+            alert(`OCR 服務出錯 (${ocrRes.status}): ${errorText.substring(0, 50)}...`);
+            setOcrLoading(false);
+            return;
+          }
+
           const ocrData = await ocrRes.json();
           
           if (ocrData.items) {
             setDetectedItems(ocrData.items.map((i: any) => ({ ...i, selected: true })));
           } else if (ocrData.error) {
-            console.error("OCR Error:", ocrData.error);
-            alert(`OCR 錯誤: ${ocrData.error}`);
+            console.error("OCR Logic Error:", ocrData.error);
+            alert(`OCR 識別失敗: ${ocrData.error}`);
           }
         } catch (err) {
           console.error("OCR fetch error", err);
