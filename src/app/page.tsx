@@ -71,7 +71,7 @@ export default function Dashboard() {
     <main className="min-h-screen bg-background pb-20">
       <div className="p-6 max-w-2xl mx-auto">
         <header className="flex flex-col gap-1 mb-8">
-          <h1 className="text-3xl font-extrabold tracking-tight">代購助手</h1>
+          <h1 className="text-3xl font-extrabold tracking-tight">fun card 收數簿</h1>
           <p className="text-muted-foreground">概覽客戶帳目與進度</p>
         </header>
 

@@ -13,13 +13,13 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "代購管理助手",
-  description: "簡單易用的代購帳目管理系統",
+  title: "fun card 收數簿",
+  description: "概覽客戶帳目與進度",
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
-    title: "代購管理助手",
+    title: "fun card 收數簿",
   },
 };
 
