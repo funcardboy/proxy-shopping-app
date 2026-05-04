@@ -18,23 +18,37 @@ export async function POST(request: Request) {
       }, { status: 500 });
     }
 
-    const client = new vision.ImageAnnotatorClient({
-      credentials: {
-        client_email: process.env.GOOGLE_CLIENT_EMAIL,
-        private_key: process.env.GOOGLE_PRIVATE_KEY.replace(/\\n/g, '\n'),
-      },
-    });
-
     const base64Data = imageBase64.replace(/^data:image\/\w+;base64,/, '');
     const content = Buffer.from(base64Data, 'base64');
 
-    console.log('Sending to Vision API, content size:', content.length);
+    console.log('Sending to Vision API via REST, content size:', content.length);
     
-    const [result] = await client.textDetection({
-      image: { content },
+    // Fallback to REST API to avoid gRPC issues on Vercel
+    const apiKey = process.env.GOOGLE_API_KEY; // You need to add this to Vercel
+    if (!apiKey) {
+      throw new Error('GOOGLE_API_KEY is missing for REST fallback');
+    }
+
+    const visionRes = await fetch(`https://vision.googleapis.com/v1/images:annotate?key=${apiKey}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        requests: [
+          {
+            image: { content: base64Data },
+            features: [{ type: 'TEXT_DETECTION' }]
+          }
+        ]
+      })
     });
-    
-    console.log('Vision API response received');
+
+    if (!visionRes.ok) {
+      const errorData = await visionRes.json();
+      throw new Error(`Vision REST API Error: ${JSON.stringify(errorData)}`);
+    }
+
+    const data = await visionRes.json();
+    const result = data.responses[0];
     
     const fullText = result.fullTextAnnotation?.text || '';
     const lines = fullText.split('\n').map(l => l.trim()).filter(l => l.length > 0);
