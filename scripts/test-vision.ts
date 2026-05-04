@@ -31,31 +31,40 @@ async function testOCR() {
     const fullText = result.fullTextAnnotation?.text || '';
     console.log('Raw Text found:', fullText.substring(0, 100) + '...');
 
-    const detectedItems: { name: string; price: number }[] = [];
-    const pages = result.fullTextAnnotation?.pages || [];
+    console.log('\n--- Smart Parsing ---');
+    const lines = fullText.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+    const smartItems: { name: string; price: number }[] = [];
 
-    if (pages.length > 0) {
-      for (const page of pages) {
-        for (const block of page.blocks || []) {
-          for (const paragraph of block.paragraphs || []) {
-            const lineText = paragraph.words?.map(w => w.symbols?.map(s => s.text).join('')).join(' ') || '';
-            const priceMatch = lineText.match(/(\d{1,3}(?:,\d{3})+|\d{3,})\s*(?=円|税込|元|\s|$)/);
-            if (priceMatch) {
-              const price = parseFloat(priceMatch[1].replace(/,/g, ''));
-              let name = lineText.split(priceMatch[0])[0].trim();
-              name = name.replace(/^[\s・\-\>]+/, '').trim();
-              const isExcluded = /合計|小計|送料|消費税|税込|消費|手数料|ポイント/.test(name);
-              if (name && name.length > 2 && !isNaN(price) && !isExcluded) {
-                detectedItems.push({ name, price });
-              }
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i];
+      // Price pattern: e.g. "1,760円" or "900" (if it looks like a price)
+      const priceMatch = line.match(/(\d{1,3}(?:,\d{3})+|\d{3,})\s*(?=円|税込|$)/);
+      
+      if (priceMatch) {
+        const price = parseFloat(priceMatch[1].replace(/,/g, ''));
+        if (price === 283) continue; // Noise
+
+        // Look backwards for the name. 
+        // We skip lines that are just numbers (Qty) or SKU-like
+        let name = "";
+        for (let j = i - 1; j >= Math.max(0, i - 4); j--) {
+          const prevLine = lines[j];
+          if (prevLine.match(/[^\d\s\-\,]{3,}/)) { // Contains at least 3 non-digit characters
+            name = prevLine;
+            // If the line before that also looks like name, prepend it
+            if (j > 0 && lines[j-1].match(/[^\d\s\-\,]{3,}/) && !lines[j-1].includes('商品名') && !lines[j-1].includes('価格')) {
+              name = lines[j-1] + " " + name;
             }
+            break;
           }
+        }
+
+        if (name && !/合計|小計|送料|消費税|税込|手数料/.test(name)) {
+          smartItems.push({ name, price });
         }
       }
     }
-
-    console.log('\n--- Detected Items ---');
-    console.table(detectedItems);
+    console.table(smartItems);
 
   } catch (error) {
     console.error('FAILED:', error);

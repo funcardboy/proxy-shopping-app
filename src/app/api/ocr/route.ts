@@ -9,14 +9,10 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'No image data' }, { status: 400 });
     }
 
-    console.log('Client Email:', process.env.GOOGLE_CLIENT_EMAIL);
-    const privateKey = process.env.GOOGLE_PRIVATE_KEY;
-    console.log('Private Key length:', privateKey?.length || 0);
-
     const client = new vision.ImageAnnotatorClient({
       credentials: {
         client_email: process.env.GOOGLE_CLIENT_EMAIL,
-        private_key: privateKey?.replace(/\\n/g, '\n'),
+        private_key: process.env.GOOGLE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
       },
     });
 
@@ -25,56 +21,40 @@ export async function POST(request: Request) {
 
     const [result] = await client.documentTextDetection({
       image: { content },
-    }).catch(err => {
-      console.error('Vision API Error:', err);
-      throw err;
     });
     
     const fullText = result.fullTextAnnotation?.text || '';
-    const pages = result.fullTextAnnotation?.pages || [];
-    
+    const lines = fullText.split('\n').map(l => l.trim()).filter(l => l.length > 0);
     const detectedItems: { name: string; price: number }[] = [];
 
-    if (pages.length > 0) {
-      for (const page of pages) {
-        for (const block of page.blocks || []) {
-          for (const paragraph of block.paragraphs || []) {
-            const lineText = paragraph.words?.map(w => w.symbols?.map(s => s.text).join('')).join(' ') || '';
-            
-            // Look for price pattern: Number + 円/税込 OR number with comma
-            const priceMatch = lineText.match(/(\d{1,3}(?:,\d{3})+|\d{3,})\s*(?=円|税込)/) || 
-                              lineText.match(/(\d{1,3}(?:,\d{3})+)\s*(?=\s|$)/);
-            
-            if (priceMatch) {
-              const price = parseFloat(priceMatch[1].replace(/,/g, ''));
-              let name = lineText.split(priceMatch[0])[0].trim();
-              
-              if (price === 283) continue; // Skip production number noise
+    // Using context-aware parsing for vertical layouts
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i];
+      // Match price with currency or standard format
+      const priceMatch = line.match(/(\d{1,3}(?:,\d{3})+|\d{3,})\s*(?=円|税込|$)/);
+      
+      if (priceMatch) {
+        const price = parseFloat(priceMatch[1].replace(/,/g, ''));
+        if (price === 283) continue; // Noise exclusion
 
-              name = name.replace(/^[\s・\-\>]+/, '').trim();
-              const isExcluded = /合計|小計|送料|消費税|税込|消費|手数料|ポイント/.test(name);
-
-              if (name && name.length > 2 && !isNaN(price) && !isExcluded) {
-                detectedItems.push({ name, price });
-              }
+        let name = "";
+        // Look backwards for product name (avoiding UI labels)
+        for (let j = i - 1; j >= Math.max(0, i - 5); j--) {
+          const prevLine = lines[j];
+          // Heuristic: Names usually have long strings of non-digits
+          if (prevLine.match(/[^\d\s\-\,]{3,}/) && !/商品名|価格|備考|品番|數量|削除/.test(prevLine)) {
+            name = prevLine;
+            // Capture multi-line names
+            if (j > 0 && lines[j-1].match(/[^\d\s\-\,]{3,}/) && !/商品名|價格|備考|品番|數量|削除/.test(lines[j-1])) {
+              name = lines[j-1] + " " + name;
             }
+            break;
           }
         }
-      }
-    }
 
-    if (detectedItems.length === 0) {
-      const lines = fullText.split('\n');
-      for (const line of lines) {
-        const priceMatch = line.match(/(\d{1,3}(?:,\d{3})+|\d{3,})\s*(?=円|税込)/);
-        if (priceMatch) {
-          const price = parseFloat(priceMatch[1].replace(/,/g, ''));
-          let name = line.split(priceMatch[0])[0].trim();
-          name = name.replace(/^[\s・\-\>]+/, '').trim();
-          const isExcluded = /合計|小計|送料|消費税|税込|消費|手数料|ポイント/.test(name);
-          if (name && name.length > 2 && !isNaN(price) && !isExcluded) {
-            detectedItems.push({ name, price });
-          }
+        const isExcluded = /合計|小計|送料|消費税|税込|手数料/.test(name);
+        if (name && !isExcluded) {
+          detectedItems.push({ name, price });
         }
       }
     }
@@ -90,7 +70,7 @@ export async function POST(request: Request) {
     console.error('OCR API Error:', error);
     return NextResponse.json({ 
       error: error.message || 'Unknown OCR Error',
-      details: error.code || 'NO_CODE'
+      code: error.code
     }, { status: 500 });
   }
 }
