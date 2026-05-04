@@ -9,11 +9,19 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'No image data' }, { status: 400 });
     }
 
+    console.log('OCR Request: Checking credentials...');
+    if (!process.env.GOOGLE_CLIENT_EMAIL || !process.env.GOOGLE_PRIVATE_KEY) {
+      console.error('OCR Error: Missing GOOGLE_CLIENT_EMAIL or GOOGLE_PRIVATE_KEY');
+      return NextResponse.json({ 
+        error: 'OCR Credentials missing in environment',
+        details: 'Ensure GOOGLE_CLIENT_EMAIL and GOOGLE_PRIVATE_KEY are set in Vercel'
+      }, { status: 500 });
+    }
+
     const client = new vision.ImageAnnotatorClient({
-      projectId: process.env.GOOGLE_PROJECT_ID,
       credentials: {
         client_email: process.env.GOOGLE_CLIENT_EMAIL,
-        private_key: process.env.GOOGLE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
+        private_key: process.env.GOOGLE_PRIVATE_KEY.replace(/\\n/g, '\n'),
       },
     });
 
