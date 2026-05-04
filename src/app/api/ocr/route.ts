@@ -28,9 +28,13 @@ export async function POST(request: Request) {
     const base64Data = imageBase64.replace(/^data:image\/\w+;base64,/, '');
     const content = Buffer.from(base64Data, 'base64');
 
-    const [result] = await client.documentTextDetection({
+    console.log('Sending to Vision API, content size:', content.length);
+    
+    const [result] = await client.textDetection({
       image: { content },
     });
+    
+    console.log('Vision API response received');
     
     const fullText = result.fullTextAnnotation?.text || '';
     const lines = fullText.split('\n').map(l => l.trim()).filter(l => l.length > 0);
