@@ -9,10 +9,14 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'No image data' }, { status: 400 });
     }
 
+    console.log('Client Email:', process.env.GOOGLE_CLIENT_EMAIL);
+    const privateKey = process.env.GOOGLE_PRIVATE_KEY;
+    console.log('Private Key length:', privateKey?.length || 0);
+
     const client = new vision.ImageAnnotatorClient({
       credentials: {
         client_email: process.env.GOOGLE_CLIENT_EMAIL,
-        private_key: process.env.GOOGLE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
+        private_key: privateKey?.replace(/\\n/g, '\n'),
       },
     });
 
