@@ -16,13 +16,20 @@ export async function POST(request: Request) {
       },
     });
 
+    console.log('Vision Client initialized, starting documentTextDetection...');
+
     // Remove data:image/jpeg;base64, prefix if exists
     const base64Data = imageBase64.replace(/^data:image\/\w+;base64,/, '');
     const content = Buffer.from(base64Data, 'base64');
 
     const [result] = await client.documentTextDetection({
       image: { content },
+    }).catch(err => {
+      console.error('Vision API Call Failed:', err);
+      throw new Error(`Vision API Call Failed: ${err.message || 'Unknown Error'}`);
     });
+    
+    console.log('Vision API Result received');
     
     const fullText = result.fullTextAnnotation?.text || '';
     const pages = result.fullTextAnnotation?.pages || [];
