@@ -1,4 +1,5 @@
 "use client";
+import { secureFetch } from "@/lib/fetcher";
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
@@ -53,9 +54,9 @@ export default function CustomerDetailPage() {
     async function fetchData() {
       try {
         const [custRes, itemRes, payRes] = await Promise.all([
-          fetch("/api/customers"),
-          fetch("/api/items"),
-          fetch("/api/payments"),
+          secureFetch("/api/customers"),
+          secureFetch("/api/items"),
+          secureFetch("/api/payments"),
         ]);
 
         const customers: Customer[] = await custRes.json();

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { secureFetch } from "@/lib/fetcher";
 
 interface CustomerSummary {
   id: string;
@@ -19,9 +20,9 @@ export default function Dashboard() {
     async function fetchData() {
       try {
         const [custRes, itemRes, payRes] = await Promise.all([
-          fetch("/api/customers"),
-          fetch("/api/items"),
-          fetch("/api/payments"),
+          secureFetch("/api/customers"),
+          secureFetch("/api/items"),
+          secureFetch("/api/payments"),
         ]);
 
         const customers = await custRes.json();

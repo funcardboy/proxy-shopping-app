@@ -1,4 +1,5 @@
 "use client";
+import { secureFetch } from "@/lib/fetcher";
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
@@ -19,7 +20,7 @@ export default function AddCustomer() {
     setLoading(true);
 
     try {
-      const res = await fetch("/api/customers", {
+      const res = await secureFetch("/api/customers", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(formData),

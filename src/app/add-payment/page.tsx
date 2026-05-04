@@ -1,4 +1,5 @@
 "use client";
+import { secureFetch } from "@/lib/fetcher";
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
@@ -20,7 +21,7 @@ export default function AddPayment() {
   });
 
   useEffect(() => {
-    fetch("/api/customers")
+    secureFetch("/api/customers")
       .then((res) => res.json())
       .then((data) => setCustomers(data));
   }, []);
@@ -33,7 +34,7 @@ export default function AddPayment() {
     const finalAmount = formData.direction === "out" ? -amount : amount;
 
     try {
-      const res = await fetch("/api/payments", {
+      const res = await secureFetch("/api/payments", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
