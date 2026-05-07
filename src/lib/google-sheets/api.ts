@@ -26,6 +26,7 @@ export interface Payment {
   paymentDate: string;
   method: string;
   note: string;
+  direction?: 'in' | 'out';
 }
 
 export async function getCustomers(): Promise<Customer[]> {
@@ -71,7 +72,7 @@ export async function getPayments(): Promise<Payment[]> {
   const sheets = await getGoogleSheetsClient();
   const response = await sheets.spreadsheets.values.get({
     spreadsheetId: getSheetId(),
-    range: 'Payments!A2:G',
+    range: 'Payments!A2:H',
   });
 
   const rows = response.data.values || [];
@@ -84,6 +85,7 @@ export async function getPayments(): Promise<Payment[]> {
       paymentDate: row[3],
       method: row[4],
       note: row[5],
+      direction: row[7] as any || 'in',
     }));
 }
 
@@ -133,7 +135,7 @@ export async function addPayment(payment: Omit<Payment, 'id'>) {
   
   await sheets.spreadsheets.values.append({
     spreadsheetId: getSheetId(),
-    range: 'Payments!A:F',
+    range: 'Payments!A:H',
     valueInputOption: 'USER_ENTERED',
     requestBody: {
       values: [[
@@ -142,7 +144,9 @@ export async function addPayment(payment: Omit<Payment, 'id'>) {
         payment.amountHkd,
         payment.paymentDate,
         payment.method,
-        payment.note
+        payment.note,
+        'FALSE',
+        payment.direction || 'in'
       ]],
     },
   });
