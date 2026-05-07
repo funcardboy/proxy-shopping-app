@@ -33,9 +33,13 @@ export default function Dashboard() {
           const owed = items
             .filter((i: any) => i.customerId === c.id)
             .reduce((sum: number, i: any) => sum + i.costHkd, 0);
+          
+          // Payments to Sam are positive, Sam's debt to customer is negative in the DB.
+          // But for "totalPaid", we want to show how much the customer has contributed.
           const paid = payments
             .filter((p: any) => p.customerId === c.id)
             .reduce((sum: number, p: any) => sum + p.amountHkd, 0);
+            
           return {
             id: c.id,
             name: c.name,

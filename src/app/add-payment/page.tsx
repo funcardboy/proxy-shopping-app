@@ -31,6 +31,8 @@ export default function AddPayment() {
     setLoading(true);
 
     const amount = Number(formData.amountHkd);
+    // "in" (customer pays Sam) = positive
+    // "out" (Sam pays back customer) = negative, reducing total paid
     const finalAmount = formData.direction === "out" ? -amount : amount;
 
     try {
@@ -105,6 +107,7 @@ export default function AddPayment() {
                 >
                   <span className="text-lg">💰</span>
                   <span className="text-sm">客戶找數比我</span>
+                  <span className="text-[10px] opacity-60">(增加已付)</span>
                 </button>
                 <button
                   type="button"
@@ -112,7 +115,8 @@ export default function AddPayment() {
                   className={`p-4 rounded-2xl font-bold border-2 transition-all flex flex-col items-center gap-1 ${formData.direction === "out" ? "border-destructive bg-destructive/10 text-destructive" : "border-border hover:border-muted-foreground/30"}`}
                 >
                   <span className="text-lg">💸</span>
-                  <span className="text-sm">我欠客戶錢</span>
+                  <span className="text-sm">我還錢比客戶</span>
+                  <span className="text-[10px] opacity-60">(減少已付)</span>
                 </button>
               </div>
             </div>
