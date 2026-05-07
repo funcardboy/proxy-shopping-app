@@ -7,9 +7,9 @@ import { secureFetch } from "@/lib/fetcher";
 interface CustomerSummary {
   id: string;
   name: string;
-  totalOwed: number;
-  totalPaid: number;
-  balance: number;
+  samContribution: number; // Red: Sam gives goods/cash to customer
+  custContribution: number; // Green: Customer gives goods/cash to Sam
+  balance: number; // SamContribution - CustContribution (Positive: Cust owes Sam)
 }
 
 export default function Dashboard() {
@@ -30,22 +30,30 @@ export default function Dashboard() {
         const payments = await payRes.json();
 
         const data: CustomerSummary[] = customers.map((c: any) => {
-          const owed = items
+          // 🔴 Sam's Contribution: Items he bought for customer
+          const itemOwed = items
             .filter((i: any) => i.customerId === c.id)
             .reduce((sum: number, i: any) => sum + i.costHkd, 0);
           
-          // Payments to Sam are positive, Sam's debt to customer is negative in the DB.
-          // But for "totalPaid", we want to show how much the customer has contributed.
-          const paid = payments
-            .filter((p: any) => p.customerId === c.id)
+          // 💸 Sam's Contribution: Cash he refunded/paid to customer
+          const cashRefunded = payments
+            .filter((p: any) => p.customerId === c.id && p.direction === "out")
             .reduce((sum: number, p: any) => sum + p.amountHkd, 0);
-            
+
+          // 🟢 Customer's Contribution: Cash paid to Sam or Goods provided to Sam
+          const custPaid = payments
+            .filter((p: any) => p.customerId === c.id && p.direction === "in")
+            .reduce((sum: number, p: any) => sum + p.amountHkd, 0);
+
+          const samTotal = itemOwed + cashRefunded;
+          const custTotal = custPaid;
+
           return {
             id: c.id,
             name: c.name,
-            totalOwed: owed,
-            totalPaid: paid,
-            balance: owed - paid,
+            samContribution: samTotal,
+            custContribution: custTotal,
+            balance: samTotal - custTotal,
           };
         });
 
@@ -96,7 +104,7 @@ export default function Dashboard() {
             <div className="w-10 h-10 rounded-full bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center text-emerald-600 dark:text-emerald-400">
               <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="20" height="14" x="2" y="5" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
             </div>
-            <span className="text-xs font-semibold">付款</span>
+            <span className="text-xs font-semibold">資金往來</span>
           </Link>
         </section>
 
@@ -115,10 +123,10 @@ export default function Dashboard() {
                 <div className="flex justify-between items-center">
                   <div className="flex flex-col gap-1">
                     <h3 className="text-lg font-bold group-hover:text-primary transition-colors">{s.name}</h3>
-                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                      <span>應付 HKD {s.totalOwed.toLocaleString()}</span>
+                    <div className="flex items-center gap-2 text-[10px] font-bold text-muted-foreground uppercase">
+                      <span className="text-destructive">🔴 Sam 貢獻: ${s.samContribution.toLocaleString()}</span>
                       <span className="w-1 h-1 rounded-full bg-border"></span>
-                      <span>已付 HKD {s.totalPaid.toLocaleString()}</span>
+                      <span className="text-success">🟢 客戶貢獻: ${s.custContribution.toLocaleString()}</span>
                     </div>
                   </div>
                   
@@ -127,17 +135,9 @@ export default function Dashboard() {
                       {s.balance > 0.01 ? `-$${s.balance.toLocaleString()}` : (s.balance < -0.01 ? `+$${Math.abs(s.balance).toLocaleString()}` : "已結清")}
                     </div>
                     <div className="text-[10px] font-bold uppercase opacity-60">
-                      {s.balance > 0.01 ? "佢欠我" : (s.balance < -0.01 ? "我欠佢" : "已清數")}
+                      {s.balance > 0.01 ? "佢欠我" : (s.balance < -0.01 ? "我欠佢" : "已結清")}
                     </div>
                   </div>
-                </div>
-                
-                {/* Visual indicator bar */}
-                <div className="mt-3 w-full h-1 bg-muted rounded-full overflow-hidden">
-                   <div 
-                    className={`h-full transition-all duration-500 ${s.balance > 0.01 ? "bg-destructive/40" : (s.balance < -0.01 ? "bg-success/40" : "bg-muted-foreground/20")}`}
-                    style={{ width: s.totalOwed > 0 ? `${Math.min(100, (s.totalPaid / s.totalOwed) * 100)}%` : "0%" }}
-                   ></div>
                 </div>
               </Link>
             ))}

@@ -16,7 +16,7 @@ export default function AddPayment() {
     amountHkd: "",
     method: "FPS",
     note: "",
-    direction: "in", // "in" for customer pays Sam, "out" for Sam owes customer
+    direction: "in", // "in": Customer gives value to Sam (Paid), "out": Sam gives value to Customer (Refund/Payment)
     paymentDate: new Date().toISOString().split("T")[0],
   });
 
@@ -30,18 +30,17 @@ export default function AddPayment() {
     e.preventDefault();
     setLoading(true);
 
-    const amount = Number(formData.amountHkd);
-    // "in" (customer pays Sam) = positive
-    // "out" (Sam pays back customer) = negative, reducing total paid
-    const finalAmount = formData.direction === "out" ? -amount : amount;
-
+    const amount = Math.abs(Number(formData.amountHkd));
+    // ALWAYS STORE AS POSITIVE IN DB. 
+    // We will use the 'direction' field to decide if it's "Customer pays Sam" or "Sam pays Customer"
+    
     try {
       const res = await secureFetch("/api/payments", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           ...formData,
-          amountHkd: finalAmount,
+          amountHkd: amount, 
         }),
       });
 
@@ -62,7 +61,7 @@ export default function AddPayment() {
         <div className="w-20 h-20 bg-success/20 text-success rounded-full flex items-center justify-center mb-6">
           <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
         </div>
-        <h1 className="text-2xl font-black mb-2">付款記錄成功</h1>
+        <h1 className="text-2xl font-black mb-2">記錄成功</h1>
         <p className="text-muted-foreground">正在返回儀表板...</p>
       </div>
     );
@@ -76,8 +75,8 @@ export default function AddPayment() {
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6"/></svg>
             取消並返回
           </Link>
-          <h1 className="text-4xl font-black tracking-tight">記錄付款</h1>
-          <p className="text-muted-foreground">記錄客戶已支付的金額</p>
+          <h1 className="text-4xl font-black tracking-tight">記錄資金/物資往來</h1>
+          <p className="text-muted-foreground">記錄誰給了誰錢或貨物</p>
         </header>
 
         <form onSubmit={handleSubmit} className="space-y-6">
@@ -98,7 +97,7 @@ export default function AddPayment() {
             </div>
 
             <div className="space-y-3">
-              <label className="text-xs font-black uppercase tracking-widest text-muted-foreground px-1">方向</label>
+              <label className="text-xs font-black uppercase tracking-widest text-muted-foreground px-1">交易類型</label>
               <div className="grid grid-cols-2 gap-3">
                 <button
                   type="button"
@@ -106,8 +105,8 @@ export default function AddPayment() {
                   className={`p-4 rounded-2xl font-bold border-2 transition-all flex flex-col items-center gap-1 ${formData.direction === "in" ? "border-success bg-success/10 text-success" : "border-border hover:border-muted-foreground/30"}`}
                 >
                   <span className="text-lg">💰</span>
-                  <span className="text-sm">客戶找數比我</span>
-                  <span className="text-[10px] opacity-60">(客戶付款/定金)</span>
+                  <span className="text-sm">客比錢我 /<br/>我欠客錢</span>
+                  <span className="text-[10px] opacity-60">(客對 Sam 的貢獻)</span>
                 </button>
                 <button
                   type="button"
@@ -115,8 +114,8 @@ export default function AddPayment() {
                   className={`p-4 rounded-2xl font-bold border-2 transition-all flex flex-col items-center gap-1 ${formData.direction === "out" ? "border-destructive bg-destructive/10 text-destructive" : "border-border hover:border-muted-foreground/30"}`}
                 >
                   <span className="text-lg">💸</span>
-                  <span className="text-sm">我欠客戶錢 / 我向客買野</span>
-                  <span className="text-[10px] opacity-60">(扣減已收/我還款)</span>
+                  <span className="text-sm">我找錢比客 /<br/>我比貨客</span>
+                  <span className="text-[10px] opacity-60">(Sam 對客的貢獻)</span>
                 </button>
               </div>
             </div>
@@ -135,44 +134,24 @@ export default function AddPayment() {
             </div>
 
             <div className="space-y-1.5">
-              <label className="text-xs font-black uppercase tracking-widest text-muted-foreground px-1">付款方式</label>
-              <select
-                className="w-full bg-background border-2 border-border focus:border-primary focus:ring-0 p-4 rounded-2xl font-bold transition-all appearance-none"
-                value={formData.method}
-                onChange={(e) => setFormData({ ...formData, method: e.target.value })}
-                required
-              >
-                <option value="FPS">轉數快 (FPS)</option>
-                <option value="PayMe">PayMe</option>
-                <option value="AlipayHK">支付寶 (AlipayHK)</option>
-                <option value="Bank Transfer">銀行轉帳</option>
-                <option value="Cash">現金</option>
-              </select>
-            </div>
-
-            <div className="space-y-1.5">
-              <label className="text-xs font-black uppercase tracking-widest text-muted-foreground px-1">備註 (可選)</label>
+              <label className="text-xs font-black uppercase tracking-widest text-muted-foreground px-1">備註 (例如: Sam 買野、找尾數)</label>
               <input
                 className="w-full bg-background border-2 border-border focus:border-primary focus:ring-0 p-4 rounded-2xl font-bold transition-all placeholder:text-muted-foreground/40"
                 type="text"
                 value={formData.note}
                 onChange={(e) => setFormData({ ...formData, note: e.target.value })}
-                placeholder="例如: 已收據、尾數等"
+                placeholder="必填以資識別"
+                required
               />
             </div>
           </div>
 
           <button
             type="submit"
-            className={`w-full text-white p-5 rounded-2xl font-black text-lg shadow-lg active:scale-[0.98] transition-all disabled:opacity-50 flex items-center justify-center gap-2 ${formData.direction === "out" ? "bg-destructive shadow-destructive/20 hover:shadow-destructive/40" : "bg-success shadow-success/20 hover:shadow-success/40"}`}
+            className={`w-full text-white p-5 rounded-2xl font-black text-lg shadow-lg active:scale-[0.98] transition-all disabled:opacity-50 flex items-center justify-center gap-2 ${formData.direction === "out" ? "bg-destructive shadow-destructive/20" : "bg-success shadow-success/20"}`}
             disabled={loading}
           >
-            {loading ? (
-              <>
-                <div className="w-5 h-5 border-3 border-white/30 border-t-white rounded-full animate-spin"></div>
-                處理中
-              </>
-            ) : (formData.direction === "out" ? "確認記錄支出" : "確認記錄付款")}
+            確認記錄
           </button>
         </form>
       </div>
