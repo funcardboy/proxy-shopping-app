@@ -166,7 +166,7 @@ export default function CustomerDetailPage() {
                 {totalBalance > 0.01 ? `-$${totalBalance.toLocaleString()}` : (totalBalance < -0.01 ? `+$${Math.abs(totalBalance).toLocaleString()}` : "已結清")}
               </div>
               <div className={`mt-1 text-[10px] font-bold px-2 py-0.5 rounded uppercase ${totalBalance > 0.01 ? "bg-destructive/10 text-destructive" : (totalBalance < -0.01 ? "bg-success/10 text-success" : "bg-muted text-muted-foreground")}`}>
-                {totalBalance > 0.01 ? "欠款" : (totalBalance < -0.01 ? "預付額" : "已結清")}
+                {totalBalance > 0.01 ? "佢欠我" : (totalBalance < -0.01 ? "我欠佢" : "已結清")}
               </div>
             </div>
           </div>
@@ -236,8 +236,8 @@ export default function CustomerDetailPage() {
                           </div>
                         </div>
                         
-                        <div className={`text-lg font-black tabular-nums ${tx.type === 'item' ? "text-destructive" : (tx.data.amountHkd < 0 ? "text-destructive" : "text-success")}`}>
-                          {tx.type === 'item' ? `-$${tx.data.costHkd.toLocaleString()}` : (tx.data.amountHkd < 0 ? `-$${Math.abs(tx.data.amountHkd).toLocaleString()}` : `+$${tx.data.amountHkd.toLocaleString()}`)}
+                        <div className={`text-lg font-black tabular-nums ${tx.type === 'item' ? "text-destructive" : (tx.data.amountHkd < 0 ? "text-success" : "text-success")}`}>
+                          {tx.type === 'item' ? `-$${tx.data.costHkd.toLocaleString()}` : (tx.data.amountHkd < 0 ? `+$${Math.abs(tx.data.amountHkd).toLocaleString()}` : `+$${tx.data.amountHkd.toLocaleString()}`)}
                         </div>
                       </div>
                     </div>

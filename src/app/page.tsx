@@ -127,7 +127,7 @@ export default function Dashboard() {
                       {s.balance > 0.01 ? `-$${s.balance.toLocaleString()}` : (s.balance < -0.01 ? `+$${Math.abs(s.balance).toLocaleString()}` : "已結清")}
                     </div>
                     <div className="text-[10px] font-bold uppercase opacity-60">
-                      {s.balance > 0.01 ? "待追討" : (s.balance < -0.01 ? "多付額" : "已清數")}
+                      {s.balance > 0.01 ? "佢欠我" : (s.balance < -0.01 ? "我欠佢" : "已清數")}
                     </div>
                   </div>
                 </div>
